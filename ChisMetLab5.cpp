@@ -176,12 +176,12 @@ void reverseNewton()
 	double solution;
 
 	double omega = 1;
-	/*solution = SepDiffTable[0][0];
+	solution = SepDiffTable[0][0];
 	for (int k = 1; k < N; k++)
 	{
-		omega *=  - SepDiffTable[k - 1][1];
+		omega *=  - SepDiffTable[k - 1][0];
 		solution += omega * SepDiffTable[0][k + 1];
-	}*/
+	}
 
 
 	int j = 0;
