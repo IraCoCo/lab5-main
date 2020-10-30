@@ -329,16 +329,7 @@ void Integral()
 	for (int i = 0; i < 3; i++)
 		matrix[i] = new double[3]{ 0,0,0 };
 	double vectorRight[3]{ 0, 0, 0 };
-	double** table = new double* [N];
-	for (int i = 0; i < N; i++)
-		table[i] = new double[2];
 
-	for (int i = 0; i < N; i++)
-	{
-		double x = 1 + i * h;
-		table[i][0] = x;
-		table[i][1] = getFunctionResult(x);
-	}
 	matrix[0][0] = 1;
 	matrix[0][1] = 3 / 2.0; 
 	matrix[0][2] = 7 / 3.0;
@@ -366,6 +357,8 @@ void Integral()
 	norm = sqrt(abs(normF - normG));
 
 	output << "\n Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
+	deleteMatrix(matrix, 3);
+	delete[]vectorResult;
 }
 int main()
 {
