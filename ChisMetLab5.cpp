@@ -5,9 +5,9 @@
 #include <cmath>
 using namespace std;
 
-const int var = 24;
-//24 f(x) = 2e^x-2x+3
-//25 f(x) = 3^x + 2-x
+const int var = 28;
+//27 f(x) = e^(-2x)-2x + 3
+//28 f(x) = 3^x + 2-x + 5
 const int N = 6;
 
 const int givenN = 5;
@@ -20,16 +20,20 @@ ofstream output;
 
 double getFunctionResult(double x)
 {
-	/*if (var == 24)
-		return 2 * exp(x) - 2 * x + 3;
+	if (var == 27)
+		return  exp(-2 * x) - 2 * x + 1;
 	else
-		return pow(3, x) + 2 - x;*/
-	return pow(3, x - 1) + 4 - x;
+		return pow(3, x) - 2 * x + 5;
+	//return pow(3, x - 1) + 4 - x;
 }
 
 double getDirFunctionResult(double x)
 {
-	return pow(3, x - 1) * log(3) - 1;
+	if (var == 27)
+		return -2 * exp(-2*x) - 2 ;
+	else
+		return pow(3, x) * log(3) - 2;
+	//return pow(3, x - 1) * log(3) - 1;
 }
 
 void printHead(int method)
@@ -135,8 +139,13 @@ void newtonInterpolation()
 	double** SepDiffTable = createSerpDiffTable(false);
 	printSerpDiffTable(SepDiffTable);
 
-	//pow(3, x - 1) + 4 - x;
-	double M6 = 3 * pow(log(3), 6);
+	
+	double M6;
+	if (var == 27)
+		M6 = 128 * exp(-2 * 0);
+	else
+		M6 = 3 * pow(log(3), 6);
+
 	double x = 0;
 	double fx = 0;
 	double pnx = 0;
@@ -194,10 +203,19 @@ double FindErrorForSpline(double M4, double M5)
 
 void splainInterpolation()
 {
-	output << " Интерполяционная формула Ньютона \n";
-	double M5 = 3 * pow(log(3), 5);
-	double M4 = 3 * pow(log(3), 4);
-
+	output << " Интерполяция кубическим сплайном \n";
+	double M5; ///!!!!!!!!!!!!!!!!!!
+	double M4;//!!!!!!!!!!!!!!!!!!
+	if (var == 27)
+	{
+		M5 = -64 * exp(-2 * 0);
+		M4 =  32 * exp(-2 * 0);
+	}
+	else
+	{
+		M5 = 3 * pow(log(3), 5);
+		M4 = 3 * pow(log(3), 4);
+	}
 	double* m = new double[N];
 	double df0 = getDirFunctionResult(a);
 	double dfn = getDirFunctionResult(b);
@@ -215,8 +233,8 @@ void splainInterpolation()
 
 	for (int j = 1; j < N - 1; j++)
 	{
-		double xNext = 1 + (j + 1) * h;
-		double xPrev = 1 + (j - 1) * h;
+		double xNext = 1 + (j + 1.0) * h;
+		double xPrev = 1 + (j - 1.0) * h;
 		alpha[j + 1] = -1 / (4 + alpha[j]);
 		beta[j + 1] = (3 * (getFunctionResult(xNext) - getFunctionResult(xPrev)) / h - beta[j]) / (4 + alpha[j]);
 	}
@@ -244,7 +262,7 @@ void splainInterpolation()
 	for (int i = 0; i < N - 1; i++)
 	{
 		double x = 1 + i * h;
-		double xNext = 1 + (i + 1) * h;
+		double xNext = 1 + (i + 1.0) * h;
 		double xPart = 1 + (i + 0.5) * h;
 
 		double tau = (xPart - x) / h;
@@ -268,11 +286,11 @@ void splainInterpolation()
 void reverseNewton()
 {
 	output << "\n Решение уравнения методом обратной интерполяции\n";
-	double c = 4.2320508;
-
+	//double c = 4.2320508;
+	double c = 0;
+	if (var == 27) c = -1.95021;
+	else c = 7.19615;
 	double** SepDiffTable = createSerpDiffTable(true);
-
-	//printSerpDiffTable(SepDiffTable);
 	double solution;
 
 	double omega = 1;
@@ -283,20 +301,14 @@ void reverseNewton()
 		solution += omega * SepDiffTable[0][k + 1];
 	}
 
-	//полукостыль для вывода
-	/*for (int i = 0; i < N; i++)
-	{
-		SepDiffTable[i][0] -= c;
-	}*/
-	printSerpDiffTable(SepDiffTable);
 
-	int j = 0;
-	for (j = 0; SepDiffTable[j][0] < 0; j++);
-
+	//printSerpDiffTable(SepDiffTable);
 	//полукостыль для вывода
 	for (int i = 0; i < N; i++)
 		SepDiffTable[i][0] -= c;
 
+	int j = 0;
+	/*for (j = 0; SepDiffTable[j][0] < 0; j++);*/
 	printSerpDiffTable(SepDiffTable);
 
 	output << "\n c = " << c;
@@ -390,7 +402,7 @@ void Discrete()
 	}
 	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
-	output << " P(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
+	output << " P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
 	double normF = 0;
 	double normG = 0;
 
@@ -414,7 +426,18 @@ void Integral()
 	for (int i = 0; i < 3; i++)
 		matrix[i] = new double[3]{ 0,0,0 };
 	double vectorRight[3]{ 0, 0, 0 };
-
+	if (var == 27)
+	{
+		vectorRight[0] = -2.0 - 1.0 / (2 * exp(4)) + 1.0 / (2 * exp(2));
+		vectorRight[1] = -19 / 6.0 - 5.0 / (4 * exp(4)) + 3.0 / (4 * exp(2));
+		vectorRight[2] = -31 / 6.0 - 13.0 / (4 * exp(4)) + 5.0 / (4 * exp(2));
+	}
+	else 
+	{
+		vectorRight[0] = 2.0 + 6.0 / log(3);
+		vectorRight[1] = 17 / 6.0 + (-6 + 15 * log(3)) / pow(log(3), 2);
+		vectorRight[2] = 25 / 6.0 + (12 - 30 * log(3) + 33 * pow(log(3), 2)) / pow(log(3), 3);
+	}
 	matrix[0][0] = 1;
 	matrix[0][1] = 3 / 2.0;
 	matrix[0][2] = 7 / 3.0;
@@ -425,20 +448,30 @@ void Integral()
 	matrix[2][1] = 15 / 4.0;
 	matrix[2][2] = 31 / 5.0;
 
-	printMatrix(matrix, 3, 0);
+	
 
-	vectorRight[0] = 2.5 + 2.0 / log(3);
+	/*vectorRight[0] = 2.5 + 2.0 / log(3);
 	vectorRight[1] = 11 / 3.0 + (-2 + 5 * log(3)) / pow(log(3), 2);
-	vectorRight[2] = 67 / 12.0 + (4 - 10 * log(3) + 11 * pow(log(3), 2)) / pow(log(3), 3);
-
+	vectorRight[2] = 67 / 12.0 + (4 - 10 * log(3) + 11 * pow(log(3), 2)) / pow(log(3), 3);*/
+	printMatrix(matrix, 3, 0);
 	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
-	output << " P(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
+	output << " P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
 
-	double normF = 18.749867398;
-	double normG = 18.749871146;
-
-
+	/*double normF = 18.749867398;
+	double normG = 18.749871146;*/
+	double normF = 0;
+	double normG = 0;
+	if (var == 27)
+	{
+		normF = 4.140420366;
+		normG = 4.1404181673;
+	}
+	else
+	{
+		normF = 56.98679628;
+		normG = 56.986308866;
+	}
 	norm = sqrt(abs(normF - normG));
 
 	output << "\n Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
