@@ -204,7 +204,6 @@ void reverseNewton()
 		omega *= c - SepDiffTable[k - 1][0]; //эт первый столбец с уже вычетом из C
 		solution += omega * SepDiffTable[0][k + 1];
 	}
-
 	//полукостыль для вывода
 	/*for (int i = 0; i < N; i++)
 	{
@@ -214,6 +213,14 @@ void reverseNewton()
 
 	int j = 0;
 	for (j = 0; SepDiffTable[j][0] < 0; j++);
+
+	//полукостыль для вывода
+	for (int i = 0; i < N; i++)
+	{
+		SepDiffTable[i][0] -= c;
+	}
+	printSerpDiffTable(SepDiffTable);
+
 	output << "\n c = " << c;
 	output << "\n Корень = " << solution << " j = " << j;
 	output << "\n Неявязка = Abs(f(x)-c) = " << abs(getFunctionResult(solution) - c);
@@ -226,6 +233,7 @@ double matrixDet(double **matrix) {
 
 	return (matrix[0][0] * matrix[1][1] * matrix[2][2] + matrix[0][1] * matrix[1][2] * matrix[2][0] + matrix[1][0] * matrix[2][1] * matrix[0][2]) -
 		(matrix[0][2] * matrix[1][1] * matrix[2][0] + matrix[0][0] * matrix[2][1] * matrix[1][2] + matrix[1][0] * matrix[0][1] * matrix[2][2]);
+
 }
 double* cramer(double** A, double* b)
 {
