@@ -27,6 +27,11 @@ double getFunctionResult(double x)
 	return pow(3, x - 1) + 4 - x;
 }
 
+double getDirFunctionResult(double x)
+{
+	return pow(3, x - 1) * log(3) - 1;
+}
+
 void printHead(int method)
 {
 	switch (method)
@@ -34,11 +39,18 @@ void printHead(int method)
 	case 1:
 		output << setw(15) << "x" << setw(15) << "f(x)" << setw(15) << "Pn(x)" << setw(20) << "Delta" << setw(20) << "Оценка \n";
 		break;
+	case 2:
+		output << setw(15) << "x[i]" << setw(15) << "df/dx(x[i])" << setw(15) << "m[i]" << setw(20) << "Delta" << setw(20) << "Оценка \n";
+		break;
+	case 3:
+		output << setw(15) << "x" << setw(15) << "f(x)" << setw(15) << "S31(f;x)" << setw(20) << "Abs(f(x)-S31(f;x))" << setw(20) << "Оценка \n";
+		break;
 	default:
 		output << "Неизвестный метод";
 		break;
 	}
 }
+
 void printSerpDiffTable(double** table)
 {
 	output << " Таблица разделенных разностей \n";
@@ -56,7 +68,8 @@ void printSerpDiffTable(double** table)
 		output << "\n";
 	}
 }
-void printMatrix(double** m,int n, bool exp) // печать матрицы в файл
+
+void printMatrix(double** m, int n, bool exp) // печать матрицы в файл
 {
 	output << "\n Матрица\n";
 	for (int i = 0; i < n; i++)
@@ -66,9 +79,9 @@ void printMatrix(double** m,int n, bool exp) // печать матрицы в �
 			else output << setw(12) << setprecision(7) << fixed << m[i][j];
 		output << endl;
 	}
-
 }
-void printVector(double* v,int n, bool exp) // печать вектора в файл
+
+void printVector(double* v, int n, bool exp) // печать вектора в файл
 {
 	output << "\n Вектор правых частей\n";
 	for (int j = 0; j < n; j++)
@@ -76,6 +89,7 @@ void printVector(double* v,int n, bool exp) // печать вектора в ф
 		else output << setw(12) << setprecision(7) << fixed << v[j];
 	output << endl;
 }
+
 void deleteMatrix(double** m, int n) //удаление матрицы, очищение памяти
 {
 	for (int i = 0; i < n; i++)
@@ -114,7 +128,6 @@ double** createSerpDiffTable(bool reverse)
 
 	return table;
 }
-
 //интерполяция с помощью формулы Ньютона;
 void newtonInterpolation()
 {
@@ -164,29 +177,94 @@ void newtonInterpolation()
 	delete[] SepDiffTable;
 }
 
+double fi0(double tau)
+{
+	return (1 + 2 * tau) * pow(1 - tau, 2);
+}
+
+double fi1(double tau)
+{
+	return tau * pow(1 - tau, 2);
+}
+
+double FindErrorForSpline(double M4, double M5)
+{
+	return (M4 / 384 + M5 * h / 240) * pow(h, 4);
+}
+
 void splainInterpolation()
 {
 	output << " Интерполяционная формула Ньютона \n";
 	double M5 = 3 * pow(log(3), 5);
 	double M4 = 3 * pow(log(3), 4);
 
+	double* m = new double[N];
+	double df0 = getDirFunctionResult(a);
+	double dfn = getDirFunctionResult(b);
 
-}
-/*double** createDiffTable()
-{
-	double** table = new double* [N];
-	for (int i = 0; i < N; i++)
-		table[i] = new double[2];
+	//Кладем на концы
+	m[0] = df0;
+	m[N - 1] = dfn;
+
+	//Метод прогонки
+	double* alpha = new double[N];
+	double* beta = new double[N];
+
+	alpha[1] = 0;
+	beta[1] = df0;
+
+	for (int j = 1; j < N - 1; j++)
+	{
+		double xNext = 1 + (j + 1) * h;
+		double xPrev = 1 + (j - 1) * h;
+		alpha[j + 1] = -1 / (4 + alpha[j]);
+		beta[j + 1] = (3 * (getFunctionResult(xNext) - getFunctionResult(xPrev)) / h - beta[j]) / (4 + alpha[j]);
+	}
+
+	for (int j = N - 2; j >= 0; j--)
+		m[j] = alpha[j + 1] * m[j + 1] + beta[j + 1];
+
+	output << "\n M5 = " << M5 << "\n\n";
+	printHead(2);
 
 	for (int i = 0; i < N; i++)
 	{
 		double x = 1 + i * h;
-		table[i][0] = x;
-		table[i][1] = getFunctionResult(x);
+		double dfx = getDirFunctionResult(x);
+		output << setw(15) << setprecision(7) << fixed << x;
+		output << setw(15) << setprecision(7) << fixed << dfx;
+		output << setw(15) << setprecision(7) << fixed << m[i];
+		output << setw(20) << setprecision(10) << fixed << scientific << abs(dfx - m[i]);
+		output << setw(20) << setprecision(10) << M5 / 60 * pow(h, 4) << "\n";
 	}
 
-	return table;
-}*/
+	output << "\n M4 = " << M4 << "\n\n";
+	printHead(3);
+
+	for (int i = 0; i < N - 1; i++)
+	{
+		double x = 1 + i * h;
+		double xNext = 1 + (i + 1) * h;
+		double xPart = 1 + (i + 0.5) * h;
+
+		double tau = (xPart - x) / h;
+		double S = fi0(tau) * getFunctionResult(x) + fi0(1 - tau) * getFunctionResult(xNext) +
+			h * (fi1(tau) * m[i] - fi1(1 - tau) * m[i + 1]);
+
+		double F = getFunctionResult(xPart);
+
+		output << setw(15) << setprecision(7) << fixed << xPart;
+		output << setw(15) << setprecision(7) << fixed << F;
+		output << setw(15) << setprecision(7) << fixed << S;
+		output << setw(20) << setprecision(10) << fixed << scientific << abs(S - F);
+		output << setw(20) << setprecision(10) << FindErrorForSpline(M4, M5) << "\n";
+	}
+
+	delete[] m;
+	delete[] alpha;
+	delete[] beta;
+}
+
 void reverseNewton()
 {
 	output << "\n Решение уравнения методом обратной интерполяции\n";
@@ -204,6 +282,7 @@ void reverseNewton()
 		omega *= c - SepDiffTable[k - 1][0]; //эт первый столбец с уже вычетом из C
 		solution += omega * SepDiffTable[0][k + 1];
 	}
+
 	//полукостыль для вывода
 	/*for (int i = 0; i < N; i++)
 	{
@@ -216,9 +295,8 @@ void reverseNewton()
 
 	//полукостыль для вывода
 	for (int i = 0; i < N; i++)
-	{
 		SepDiffTable[i][0] -= c;
-	}
+
 	printSerpDiffTable(SepDiffTable);
 
 	output << "\n c = " << c;
@@ -229,16 +307,15 @@ void reverseNewton()
 	delete[] SepDiffTable;
 }
 
-double matrixDet(double **matrix) {
-
+double matrixDet(double** matrix) {
 	return (matrix[0][0] * matrix[1][1] * matrix[2][2] + matrix[0][1] * matrix[1][2] * matrix[2][0] + matrix[1][0] * matrix[2][1] * matrix[0][2]) -
 		(matrix[0][2] * matrix[1][1] * matrix[2][0] + matrix[0][0] * matrix[2][1] * matrix[1][2] + matrix[1][0] * matrix[0][1] * matrix[2][2]);
-
 }
+
 double* cramer(double** A, double* b)
 {
 	double det0, det1, det2, det3;
-	double* res = new double [3]{ 0,0,0 };
+	double* res = new double[3]{ 0,0,0 };
 	double** temp = new double* [3];
 	for (int i = 0; i < 3; i++)
 		temp[i] = new double[3]{ 0,0,0 };
@@ -262,7 +339,7 @@ double* cramer(double** A, double* b)
 
 	for (int j = 0; j < 3; j++)
 		temp[j][1] = A[j][1];
-	
+
 	for (int j = 0; j < 3; j++)
 		temp[j][2] = b[j];
 	det3 = matrixDet(temp);
@@ -278,11 +355,11 @@ double* cramer(double** A, double* b)
 void Discrete()
 {
 	output << "\n  Дискретный вариант\n";
-	double norm=0;
-	double **matrix= new double*[3];
+	double norm = 0;
+	double** matrix = new double* [3];
 	for (int i = 0; i < 3; i++)
 		matrix[i] = new double[3]{ 0,0,0 };
-	double vectorRight[3] { 0, 0, 0 };
+	double vectorRight[3]{ 0, 0, 0 };
 	double** table = new double* [N];
 	for (int i = 0; i < N; i++)
 		table[i] = new double[2];
@@ -305,15 +382,15 @@ void Discrete()
 	matrix[0][2] = matrix[2][0];
 	matrix[1][2] = matrix[2][1];
 
-	printMatrix(matrix,3, 0);
+	printMatrix(matrix, 3, 0);
 	for (int i = 0; i < N; i++) {
 		vectorRight[0] += table[i][1];
 		vectorRight[1] += table[i][1] * table[i][0];
 		vectorRight[2] += table[i][1] * pow(table[i][0], 2);
 	}
-	printVector(vectorRight,3, 0);
+	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
-	output <<" P(x) = ("<< vectorResult[2]<<") * x^2 + ("<<vectorResult[1]<<") * x + ("<< vectorResult[0]<<")\n";
+	output << " P(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
 	double normF = 0;
 	double normG = 0;
 
@@ -339,25 +416,25 @@ void Integral()
 	double vectorRight[3]{ 0, 0, 0 };
 
 	matrix[0][0] = 1;
-	matrix[0][1] = 3 / 2.0; 
+	matrix[0][1] = 3 / 2.0;
 	matrix[0][2] = 7 / 3.0;
-	matrix[1][0] = 3 / 2.0; 
-	matrix[1][1] = 7 / 3.0; 
+	matrix[1][0] = 3 / 2.0;
+	matrix[1][1] = 7 / 3.0;
 	matrix[1][2] = 15 / 4.0;
-	matrix[2][0] = 7 / 3.0; 
-	matrix[2][1] = 15 / 4.0; 
+	matrix[2][0] = 7 / 3.0;
+	matrix[2][1] = 15 / 4.0;
 	matrix[2][2] = 31 / 5.0;
 
 	printMatrix(matrix, 3, 0);
 
 	vectorRight[0] = 2.5 + 2.0 / log(3);
-	vectorRight[1] = 11 / 3.0 + (-2 + 5*log(3)) / pow(log(3), 2);
-	vectorRight[2] = 67 / 12.0 + (4 - 10 * log(3)+11* pow(log(3), 2) ) / pow(log(3), 3);
+	vectorRight[1] = 11 / 3.0 + (-2 + 5 * log(3)) / pow(log(3), 2);
+	vectorRight[2] = 67 / 12.0 + (4 - 10 * log(3) + 11 * pow(log(3), 2)) / pow(log(3), 3);
 
 	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
 	output << " P(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
-	
+
 	double normF = 18.749867398;
 	double normG = 18.749871146;
 
@@ -368,16 +445,17 @@ void Integral()
 	deleteMatrix(matrix, 3);
 	delete[]vectorResult;
 }
+
 int main()
 {
 	output.open(fileOutput);
 
 	newtonInterpolation();
-	//splainInterpolation();
+	splainInterpolation();
 	output << "\n  Среднеквадратичное приближение\n";
 	Discrete();
 	Integral();
-	
+
 	reverseNewton();
 	output.close();
 }
