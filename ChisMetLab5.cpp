@@ -6,8 +6,8 @@
 using namespace std;
 
 const int var = 28;
-//27 f(x) = e^(-2x)-2x + 3
-//28 f(x) = 3^x + 2-x + 5
+//27 f(x) = e^(-2x)-2x + 1
+//28 f(x) = 3^x - 2x + 5
 const int N = 6;
 
 const int givenN = 5;
@@ -24,16 +24,14 @@ double getFunctionResult(double x)
 		return  exp(-2 * x) - 2 * x + 1;
 	else
 		return pow(3, x) - 2 * x + 5;
-	//return pow(3, x - 1) + 4 - x;
 }
 
 double getDirFunctionResult(double x)
 {
 	if (var == 27)
-		return -2 * exp(-2*x) - 2 ;
+		return -2 * exp(-2 * x) - 2;
 	else
 		return pow(3, x) * log(3) - 2;
-	//return pow(3, x - 1) * log(3) - 1;
 }
 
 void printHead(int method)
@@ -139,12 +137,12 @@ void newtonInterpolation()
 	double** SepDiffTable = createSerpDiffTable(false);
 	printSerpDiffTable(SepDiffTable);
 
-	
+
 	double M6;
 	if (var == 27)
-		M6 = 128 * exp(-2 * 0);
+		M6 = 64 * exp(-2 * 1);
 	else
-		M6 = 3 * pow(log(3), 6);
+		M6 = 9 * pow(log(3), 6);
 
 	double x = 0;
 	double fx = 0;
@@ -208,13 +206,13 @@ void splainInterpolation()
 	double M4;//!!!!!!!!!!!!!!!!!!
 	if (var == 27)
 	{
-		M5 = -64 * exp(-2 * 0);
-		M4 =  32 * exp(-2 * 0);
+		M5 = -32 * exp(-2 * 1);
+		M4 = 16 * exp(-2 * 1);
 	}
 	else
 	{
-		M5 = 3 * pow(log(3), 5);
-		M4 = 3 * pow(log(3), 4);
+		M5 = 9 * pow(log(3), 5);
+		M4 = 9 * pow(log(3), 4);
 	}
 	double* m = new double[N];
 	double df0 = getDirFunctionResult(a);
@@ -432,7 +430,7 @@ void Integral()
 		vectorRight[1] = -19 / 6.0 - 5.0 / (4 * exp(4)) + 3.0 / (4 * exp(2));
 		vectorRight[2] = -31 / 6.0 - 13.0 / (4 * exp(4)) + 5.0 / (4 * exp(2));
 	}
-	else 
+	else
 	{
 		vectorRight[0] = 2.0 + 6.0 / log(3);
 		vectorRight[1] = 17 / 6.0 + (-6 + 15 * log(3)) / pow(log(3), 2);
@@ -448,7 +446,7 @@ void Integral()
 	matrix[2][1] = 15 / 4.0;
 	matrix[2][2] = 31 / 5.0;
 
-	
+
 
 	/*vectorRight[0] = 2.5 + 2.0 / log(3);
 	vectorRight[1] = 11 / 3.0 + (-2 + 5 * log(3)) / pow(log(3), 2);
