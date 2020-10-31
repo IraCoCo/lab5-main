@@ -15,7 +15,7 @@ const double a = 1.0;
 const double b = 2.0;
 const double h = (b - a) / givenN;
 
-const char* fileOutput = "testout.txt"; //"output2.txt";//
+const char* fileOutput = "testout.txt"; 
 ofstream output;
 
 double getFunctionResult(double x)
@@ -60,10 +60,8 @@ void printSerpDiffTable(double** table)
 	{
 		for (int j = 0; j <= N; j++)
 		{
-			//if (table[i][j] > 0)
 			if (table[i][j] == 0)
 				output << setw(15) << " ";
-			//output << setw(15) << setprecision(7) << fixed << table[i][j];
 			else
 				output << setw(15) << setprecision(7) << fixed << table[i][j];
 		}
@@ -73,7 +71,7 @@ void printSerpDiffTable(double** table)
 
 void printMatrix(double** m, int n, bool exp) // печать матрицы в файл
 {
-	output << "\n Матрица\n";
+	output << " Матрица\n";
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
@@ -119,7 +117,7 @@ double** createSerpDiffTable(bool reverse)
 		}
 		else
 		{
-			table[i][0] = getFunctionResult(x); //- 4.2320508;
+			table[i][0] = getFunctionResult(x); 
 			table[i][1] = x;
 		}
 	}
@@ -188,12 +186,10 @@ double fi0(double tau)
 {
 	return (1 + 2 * tau) * pow(1 - tau, 2);
 }
-
 double fi1(double tau)
 {
 	return tau * pow(1 - tau, 2);
 }
-
 double FindErrorForSpline(double M4, double M5)
 {
 	return (M4 / 384 + M5 * h / 240) * pow(h, 4);
@@ -202,8 +198,8 @@ double FindErrorForSpline(double M4, double M5)
 void splainInterpolation()
 {
 	output << " Интерполяция кубическим сплайном \n";
-	double M5; ///!!!!!!!!!!!!!!!!!!
-	double M4;//!!!!!!!!!!!!!!!!!!
+	double M5; 
+	double M4;
 	if (var == 27)
 	{
 		M5 = -32 * exp(-2 * 1);
@@ -240,7 +236,7 @@ void splainInterpolation()
 	for (int j = N - 2; j >= 0; j--)
 		m[j] = alpha[j + 1] * m[j + 1] + beta[j + 1];
 
-	output << "\n M5 = " << M5 << "\n\n";
+	output << "\n M5 = " <<setprecision(7) << fixed << M5 << "\n\n";
 	printHead(2);
 
 	for (int i = 0; i < N; i++)
@@ -254,7 +250,7 @@ void splainInterpolation()
 		output << setw(20) << setprecision(10) << M5 / 60 * pow(h, 4) << "\n";
 	}
 
-	output << "\n M4 = " << M4 << "\n\n";
+	output << "\n M4 = " << setprecision(7) << fixed << M4 << "\n\n";
 	printHead(3);
 
 	for (int i = 0; i < N - 1; i++)
@@ -284,10 +280,7 @@ void splainInterpolation()
 void reverseNewton()
 {
 	output << "\n Решение уравнения методом обратной интерполяции\n";
-	//double c = 4.2320508;
-	double c = 0;
-	if (var == 27) c = -1.95021;
-	else c = 7.19615;
+	double c = getFunctionResult(1.5);
 	double** SepDiffTable = createSerpDiffTable(true);
 	double solution;
 
@@ -299,18 +292,16 @@ void reverseNewton()
 		solution += omega * SepDiffTable[0][k + 1];
 	}
 
-
-	//printSerpDiffTable(SepDiffTable);
 	//полукостыль для вывода
 	for (int i = 0; i < N; i++)
 		SepDiffTable[i][0] -= c;
 
-	int j = 0;
-	/*for (j = 0; SepDiffTable[j][0] < 0; j++);*/
+	/*int j = 0;
+	for (j = 0; SepDiffTable[j][0] < 0; j++);*/
 	printSerpDiffTable(SepDiffTable);
 
 	output << "\n c = " << c;
-	output << "\n Корень = " << solution << " j = " << j;
+	output << "\n Корень = " << solution; // << " j = " << j;
 	output << "\n Неявязка = Abs(f(x)-c) = " << abs(getFunctionResult(solution) - c);
 	for (int i = 0; i < N; i++)
 		delete[] SepDiffTable[i];
@@ -400,7 +391,7 @@ void Discrete()
 	}
 	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
-	output << " P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
+	output << "\n P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
 	double normF = 0;
 	double normG = 0;
 
@@ -410,10 +401,22 @@ void Discrete()
 	}
 	norm = sqrt(abs(normF - normG));
 
-	output << "\n Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
+	output << " Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
 	deleteMatrix(matrix, 3);
 	deleteMatrix(table, N);
 	delete[]vectorResult;
+}
+double integralG(double* res, int x)
+{
+	return pow(res[2], 2) * pow(x, 5) / 5.0 + pow(x, 4) * res[2] * res[1] / 2.0 + 
+		pow(x, 3) * (2 * res[0] * res[2] + pow(res[1], 2)) / 3.0 +
+		pow(x, 2) * res[1] * res[0] + pow(res[0], 2) * x;
+}
+double integralF(int x)
+{
+	if (var == 27)
+		return 4 * pow(x, 3) / 3.0 - 2 * pow(x, 2) + x + 2.0 * x * exp(-2 * x) - exp(-4 * x) / 4.0;
+	else return pow(3, 2 * x) / (2.0 * log(3)) - 4 * pow(3, x) * (x * log(3) - 1) / pow(log(3), 2) + 10 * pow(3, x) / log(3) + 4.0 * pow(x, 3) / 3.0 - 10 * pow(x, 2) + 25.0 * x;
 }
 
 void Integral()
@@ -446,33 +449,16 @@ void Integral()
 	matrix[2][1] = 15 / 4.0;
 	matrix[2][2] = 31 / 5.0;
 
-
-
-	/*vectorRight[0] = 2.5 + 2.0 / log(3);
-	vectorRight[1] = 11 / 3.0 + (-2 + 5 * log(3)) / pow(log(3), 2);
-	vectorRight[2] = 67 / 12.0 + (4 - 10 * log(3) + 11 * pow(log(3), 2)) / pow(log(3), 3);*/
 	printMatrix(matrix, 3, 0);
 	printVector(vectorRight, 3, 0);
 	double* vectorResult = cramer(matrix, vectorRight);
-	output << " P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
+	output << "\n P2(x) = (" << vectorResult[2] << ") * x^2 + (" << vectorResult[1] << ") * x + (" << vectorResult[0] << ")\n";
 
-	/*double normF = 18.749867398;
-	double normG = 18.749871146;*/
-	double normF = 0;
-	double normG = 0;
-	if (var == 27)
-	{
-		normF = 4.140420366;
-		normG = 4.1404181673;
-	}
-	else
-	{
-		normF = 56.98679628;
-		normG = 56.986308866;
-	}
+	double normF = integralF(2) - integralF(1);
+	double normG = integralG(vectorResult, 2) - integralG(vectorResult, 1);
 	norm = sqrt(abs(normF - normG));
 
-	output << "\n Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
+	output << " Норма погрешности " << setw(15) << setprecision(10) << fixed << norm << endl;
 	deleteMatrix(matrix, 3);
 	delete[]vectorResult;
 }
@@ -483,10 +469,9 @@ int main()
 
 	newtonInterpolation();
 	splainInterpolation();
-	output << "\n  Среднеквадратичное приближение\n";
+	output << "\n Среднеквадратичное приближение\n";
 	Discrete();
 	Integral();
-
 	reverseNewton();
 	output.close();
 }
